@@ -15,9 +15,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.static import static
+
+from student_management_system import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('account/', include('user_app.api.urls')),
     path('test/', include('user_app.urls'))
-]
+]+static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)+static(settings.STATIC_URL,document_root=settings.STATIC_ROOT)
+
