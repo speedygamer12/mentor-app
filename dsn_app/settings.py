@@ -43,9 +43,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'rest_framework_swagger',
     'drf_yasg',
     'rest_framework',
+
+    'authentication',
     'user_app',
     'rest_framework.authtoken',
 ]
@@ -151,4 +152,4 @@ AUTHENTICATION_BACKENDS = (
 )
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-AUTH_USER_MODEL="user_app.CustomUser"
+AUTH_USER_MODEL="authentication.CustomUser"

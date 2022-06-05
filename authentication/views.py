@@ -4,10 +4,9 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework import status, viewsets
-# from rest_framework_simplejwt.tokens import RefreshToken
 
-from user_app import models
-from user_app.api.serializers import RegistrationSerializer
+from . import signals
+from .serializers import RegistrationSerializer
 
 
 @api_view(['POST',])
