@@ -62,6 +62,7 @@ urllib3 = "==1.26.9"
 whitenoise = "==6.0.0"
 wrapt = "==1.12.1"
 django-cors-headers = "==3.13.0"
+djangorestframework-simplejwt = "*"
 
 [dev-packages]
 

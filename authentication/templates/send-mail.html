@@ -1,0 +1,47 @@
+from django.conf import settings
+from celery import shared_task
+from django.utils.encoding import force_bytes
+from django.core.mail import EmailMessage
+from django.utils.http import urlsafe_base64_encode
+
+from user_auth.models import CustomUser
+from .tokens import generate_token
+from django.template.loader import get_template
+
+@shared_task(bind=True, max_retries=20)
+def send_register_mail(self, value):
+    user = CustomUser.objects.get(email=value)
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = generate_token.make_token(user)
+    url = settings.FRONTEND_URL + "/auth/confirm-email?token=" +uid+token
+    ctx = {"user": user, "url": url}
+    message = get_template("register.html").render(ctx)
+    subject = "Verify your Account"
+    recipients = [user.email]
+    try:
+        send_email(subject, message, recipients)
+        return;
+    except Exception as e:
+        raise self.retry(exc=e, countdown=25200)
+
+@shared_task(bind=True, max_retries=20)
+def send_reset_password_email(self, value):
+    user = CustomUser.objects.get(email=value)
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = generate_token.make_token(user)
+    url = settings.FRONTEND_URL + "/auth/password/reset/confirm/" + uid + "/" + token
+    subject = "Reset Password Mail"
+    ctx = {"user": user, "url": url}
+    message = get_template("password_reset.html").render(ctx)
+    recipients = [user.email]
+    try:
+        send_email(subject, message, recipients)
+        return;
+    except Exception as e:
+        raise self.retry(exc=e, countdown=25200)
+
+
+def send_email(subject, message, recipients):
+    email = EmailMessage(subject, message, to=recipients)
+    email.content_subtype = "html"
+    email.send()
