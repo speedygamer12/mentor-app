@@ -63,6 +63,7 @@ whitenoise = "==6.0.0"
 wrapt = "==1.12.1"
 django-cors-headers = "==3.13.0"
 djangorestframework-simplejwt = "*"
+google-api-python-client = "*"
 
 [dev-packages]
 

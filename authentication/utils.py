@@ -1,8 +1,7 @@
-from django.core.mail import EmailMessage
-
+from django.core.mail import EmailMultiAlternatives
+from django.template import Context
 
 import threading
-
 
 class EmailThread(threading.Thread):
 
@@ -17,6 +16,10 @@ class EmailThread(threading.Thread):
 class Util:
     @staticmethod
     def send_email(data):
-        email = EmailMessage(
-            subject=data['email_subject'], body=data['email_body'], to=[data['to_email']])
+        htmly_content = data['html_content'].render(data['context'])
+        texty_content = data['text_content'].render(data['context'])
+        print(data.get('context'))
+        email = EmailMultiAlternatives(
+            subject=data['email_subject'], body=texty_content, to=[data['to_email']])
+        email.attach_alternative(htmly_content, "text/html")
         EmailThread(email).start()

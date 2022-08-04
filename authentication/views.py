@@ -1,7 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from rest_framework import status, views, generics
-from rest_framework import status, viewsets
+from rest_framework import status, views, generics, viewsets
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.contrib.sites.shortcuts import get_current_site
@@ -11,6 +10,8 @@ from django.conf import settings
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.http import HttpResponsePermanentRedirect
+from django.template.loader import get_template
+from django.template import Context
 
 import jwt
 import environ
@@ -18,7 +19,7 @@ import environ
 from . import signals
 from .serializers import (RegistrationSerializer, EmailVerificationSerializer, 
                             LogoutSerializer, SetNewPasswordSerializer, LoginSerializer,
-                            ResetPasswordEmailRequestSerializer)
+                            RequestPasswordResetEmailSerializer)
 from .utils import Util
 
 
@@ -55,10 +56,11 @@ def registration_view(request):
             current_site = get_current_site(request).domain
             relativeLink = reverse('email-verify')
             absurl = 'http://'+current_site+relativeLink+"?token="+str(token)
-            email_body = 'Hi '+user.username + \
-                ' Use the link below to verify your email \n' + absurl
-            data = {'email_body': email_body, 'to_email': user.email,
-                    'email_subject': 'Verify your email'}
+            context = Context({'url': absurl, 'name': user.username})
+
+            html_content, text_content = get_template('register-mail.html').template, get_template('register-mail.txt').template
+            data = {'html_content': html_content, 'text_content': text_content, 'to_email': user.email, 
+                    'email_subject': 'Verify your email', 'context': context}
 
             Util.send_email(data) 
 
@@ -66,6 +68,24 @@ def registration_view(request):
             user_data = serializer.errors  
             
         return Response(user_data, status=status.HTTP_201_CREATED)
+
+# @api_view(['POST',])
+# def resend_verification(request):
+
+#     if request.method == 'POST':
+#         serializer = ResendVerificationSerializer
+#         if serializer.is_valid():
+#             email = request.data.get('email', '')
+#             if User.objects.filter(email=email).exists():
+#                 user = User.objects.get(email=email)
+#                 if not user.is_verified:
+#                     user.is_verified = True
+#                     user.save()
+#                 return Response({'email': 'Successfully activated'}, status=status.HTTP_200_OK)
+#                 except jwt.ExpiredSignatureError as identifier:
+#             return Response({'error': 'Activation Expired'}, status=status.HTTP_400_BAD_REQUEST)
+#             except jwt.exceptions.DecodeError as identifier:
+#                 return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
 
 class VerifyEmail(views.APIView):
 
@@ -99,7 +119,7 @@ def login_view(request):
         return Response(user_data, status=status.HTTP_200_OK)
 
 class RequestPasswordResetEmail(generics.GenericAPIView):
-    serializer_class = ResetPasswordEmailRequestSerializer
+    serializer_class = RequestPasswordResetEmailSerializer
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -117,10 +137,13 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
 
             redirect_url = request.data.get('redirect_url', '')
             absurl = 'http://'+current_site + relativeLink
-            email_body = 'Hello, \n Use link below to reset your password  \n' + \
-                absurl+"?redirect_url="+redirect_url
-            data = {'email_body': email_body, 'to_email': user.email,
-                    'email_subject': 'Reset your passsword'}
+            finalurl = absurl+"?redirect_url="+redirect_url
+
+            html_content, text_content = get_template('reset-password.html').template, get_template('reset-password.html').template
+            
+            context = Context({'url': finalurl, 'email': user.email})
+            data = {'html_content': html_content, 'text_content': text_content, 'to_email': user.email,
+                    'email_subject': 'Reset your passsword', 'context': context}
             Util.send_email(data)
         return Response({'success': 'We have sent you a link to reset your password'}, status=status.HTTP_200_OK)
 
@@ -141,11 +164,12 @@ class PasswordTokenCheckAPI(generics.GenericAPIView):
                     return CustomRedirect(redirect_url+'?token_valid=False')
                 else:
                     return CustomRedirect(env('FRONTEND_URL')+'?token_valid=False')
-
-            if redirect_url and len(redirect_url) > 3:
-                return CustomRedirect(redirect_url+'?token_valid=True&message=Credentials Valid&uidb64='+uidb64+'&token='+token)
             else:
-                return CustomRedirect(env('FRONTEND_URL')+'?token_valid=False')
+                if redirect_url and len(redirect_url) > 3:
+                    return CustomRedirect(redirect_url+'?token_valid=True&message=Credentials Valid&uidb64='+uidb64+'&token='+token)
+                else:
+                    # return CustomRedirect(env('FRONTEND_URL')+'?token_valid=False')
+                    return Response({'success': True, 'message': 'Credentials Valid', 'uidb64': uidb64, 'token': token}, status=status.HTTP_200_OK)
 
         except DjangoUnicodeDecodeError as identifier:
             try:

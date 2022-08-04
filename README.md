@@ -1,6 +1,6 @@
 note:
-return access token as response after register, to debug invalid access code
-
+fix social_auth dependency issues: No module facebook
+Generate fackebook and twitter secret keys. 
 
 
 

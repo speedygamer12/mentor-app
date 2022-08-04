@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
-import os
 import environ
 import datetime
 # Initialise environment variables
@@ -44,13 +43,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    
+    'authentication',
+    'user_app',
+    'social_auth',
+
     'drf_yasg',
     'rest_framework',
     'corsheaders',
-
-    'authentication',
-    'user_app',
     'rest_framework.authtoken',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
