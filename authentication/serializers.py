@@ -165,3 +165,5 @@ class LogoutSerializer(serializers.Serializer):
 
         except TokenError:
             self.fail('bad_token')
+
+# class SMSOTPSerializer(serializers.Serializer):

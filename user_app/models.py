@@ -1,6 +1,9 @@
 from django.conf import settings
 from django.db import models
 
+from cloudinary.models import CloudinaryField
+from twilio.rest import Client
+
 class Lead(models.Model):
     # id=models.AutoField(primary_key=True)
     user=models.OneToOneField(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
@@ -27,8 +30,17 @@ class Mentor(models.Model):
     experience = models.TextField(blank=True)
     created=models.DateTimeField(auto_now_add=True)
     updated=models.DateTimeField(auto_now_add=True)
+    phone_is_verified = models.BooleanField(default=False)
     is_active=models.BooleanField(default=False)
     objects=models.Manager()
+
+    image = CloudinaryField("image", blank=True)
+    @property
+    def image_url(self):
+        print(type(self.image))
+        return (
+            f"https://res.cloudinary.com/dpoix2ilz/{self.image}"
+        )
 
 
 class Mentee(models.Model):

@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status, generics, viewsets
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser
+from rest_framework.parsers import MultiPartParser
 
 from user_app.permissions import (IsAdminOrReadOnly, 
                                     IsActiveOwnerorReadOnly)
@@ -43,7 +44,8 @@ class MentorAV(APIView):
 
 class MentorDetailsAV(APIView):
 
-    permission_classes = [IsActiveOwnerorReadOnly]
+    # permission_classes = [IsActiveOwnerorReadOnly]
+    parser_classes = (MultiPartParser,)
 
     def get(self, request, pk):
         try:
@@ -60,12 +62,27 @@ class MentorDetailsAV(APIView):
         except Mentor.DoesNotExist:
             return Response({'Error': 'Mentor not found'}, status = status.HTTP_404_NOT_FOUND)
 
-        serializer = MentorSerializer(mentor, request.data)
+        serializer = MentorSerializer(mentor, request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         else:
             return Response(serializer.errors)
+
+    def patch(self, request, pk):
+        try:
+            mentor = Mentor.objects.get(pk=pk)
+        except Mentor.DoesNotExist:
+            return Response({'Error': 'Mentor not found'}, status = status.HTTP_404_NOT_FOUND)
+
+        serializer = MentorSerializer(mentor, request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors)
+
+    
 
     def delete(self, request,pk):
         mentor = Mentor.objects.get(pk=pk)

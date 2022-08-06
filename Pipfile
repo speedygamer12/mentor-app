@@ -64,6 +64,11 @@ wrapt = "==1.12.1"
 django-cors-headers = "==3.13.0"
 djangorestframework-simplejwt = "*"
 google-api-python-client = "*"
+python-facebook-api = "*"
+facebook-sdk = "*"
+cloudinary = "*"
+twilio = "*"
+pyotp = "*"
 
 [dev-packages]
 
